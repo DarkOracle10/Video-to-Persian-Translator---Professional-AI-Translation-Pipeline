@@ -23,6 +23,20 @@ Version: 2.0.0
 # IMPORTS
 # ============================================================================
 import sys
+import os
+
+# Fix Windows console encoding for Unicode characters
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        import codecs
+        sys.stdout = codecs.getwriter('utf-8')(sys.stdout.buffer, 'strict')
+    
+    # Set environment variable for subprocess calls
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+
+import sys
 import time
 import argparse
 from pathlib import Path
