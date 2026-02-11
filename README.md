@@ -228,7 +228,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Amir Aeiny**
 
-- GitHub: [@your-username](https://github.com/your-username)
+- GitHub: [@DarkOracle10](https://github.com/DarkOracle10)
 
 ---
 
