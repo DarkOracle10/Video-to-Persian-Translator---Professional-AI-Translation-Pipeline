@@ -1,0 +1,127 @@
+# ============================================================
+# Video to Persian Translator - .gitignore
+# ============================================================
+
+# --------------------- Python ---------------------
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+pytest_cache/
+
+# --------------------- Virtual Environments ---------------------
+Transcriber/
+Transcriber312/
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# --------------------- IDE / Editor ---------------------
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# --------------------- Project Specific ---------------------
+# Downloaded models (large files)
+models/
+!models/.gitkeep
+
+# Input videos (user content)
+inputs/
+!inputs/.gitkeep
+
+# Output files (generated content)
+output/
+!output/.gitkeep
+
+# Temporary audio files
+*.wav
+*.mp3
+*.flac
+
+# Log files
+*.log
+logs/
+
+# --------------------- OS Generated ---------------------
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# --------------------- Secrets / API Keys ---------------------
+.env
+.env.local
+.env.*.local
+secrets.json
+api_keys.json
+
+# --------------------- Misc ---------------------
+*.bak
+*.swp
+*.tmp
+*.temp

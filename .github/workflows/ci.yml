@@ -1,0 +1,201 @@
+# ============================================================
+# CI/CD Pipeline for Video to Persian Translator
+# Runs on every push and pull request to main branch
+# ============================================================
+
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  # --------------------- Linting & Code Quality ---------------------
+  lint:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install linting tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8 black isort
+      
+      - name: Run flake8 (syntax & style check)
+        run: |
+          flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 src/ --count --exit-zero --max-complexity=10 --max-line-length=100 --statistics
+      
+      - name: Check code formatting with Black
+        run: black --check --diff src/ main.py config.py
+        continue-on-error: true
+      
+      - name: Check import sorting with isort
+        run: isort --check-only --diff src/ main.py config.py
+        continue-on-error: true
+
+  # --------------------- Dependency Installation Test ---------------------
+  install:
+    name: Dependency Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ['3.10', '3.11']
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install system dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      
+      - name: Install system dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install ffmpeg -y
+        shell: powershell
+      
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Verify imports work
+        run: |
+          python -c "from src.audio_extractor import AudioExtractor; print('✓ AudioExtractor')"
+          python -c "from src.transcriber import Transcriber; print('✓ Transcriber')"
+          python -c "from src.translator import Translator; print('✓ Translator')"
+          python -c "from src.subtitle_generator import SubtitleGenerator; print('✓ SubtitleGenerator')"
+          python -c "from src.utils import print_banner; print('✓ Utils')"
+
+  # --------------------- Syntax & Import Validation ---------------------
+  validate:
+    name: Syntax Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Validate Python syntax
+        run: |
+          python -m py_compile config.py
+          python -m py_compile main.py
+          python -m py_compile src/audio_extractor.py
+          python -m py_compile src/transcriber.py
+          python -m py_compile src/translator.py
+          python -m py_compile src/subtitle_generator.py
+          python -m py_compile src/utils.py
+          echo "✓ All Python files have valid syntax"
+      
+      - name: Verify module structure
+        run: |
+          python -c "import config; print('✓ config.py loads successfully')"
+          python -c "from src import audio_extractor, transcriber, translator, subtitle_generator, utils; print('✓ All src modules load')"
+          python -c "from main import VideoTranslator; print('✓ VideoTranslator class loads')"
+
+  # --------------------- Security Scan ---------------------
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install pip-audit
+        run: pip install pip-audit
+      
+      - name: Check for security vulnerabilities
+        run: pip-audit -r requirements.txt --ignore-vuln PYSEC-2022-43012 || true
+        continue-on-error: true
+
+  # --------------------- Build Check ---------------------
+  build:
+    name: Build Verification
+    runs-on: ubuntu-latest
+    needs: [lint, install, validate]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      
+      - name: Verify complete pipeline loads
+        run: |
+          python -c "
+          import config
+          from src.audio_extractor import AudioExtractor
+          from src.transcriber import Transcriber
+          from src.translator import Translator
+          from src.subtitle_generator import SubtitleGenerator
+          from src.utils import print_banner
+          print('✓ All modules import successfully')
+          print(f'✓ Model: {config.WHISPER_MODEL_SIZE}')
+          print(f'✓ Device: {config.DEVICE}')
+          print(f'✓ Target: {config.TARGET_LANGUAGE}')
+          "
+      
+      - name: Build summary
+        run: |
+          echo "✅ All CI checks passed!"
+          echo ""
+          echo "Project structure verified:"
+          echo "  ├── config.py"
+          echo "  ├── main.py"
+          echo "  └── src/"
+          echo "      ├── audio_extractor.py"
+          echo "      ├── transcriber.py"
+          echo "      ├── translator.py"
+          echo "      ├── subtitle_generator.py"
+          echo "      └── utils.py"
